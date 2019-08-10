@@ -1,0 +1,51 @@
+version: '2'
+
+services:
+ apache:
+  image: httpd:2.4
+  ports:
+    - 80:80
+  volumes:
+    - ./src:/var/www/html
+    - ./httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf
+  restart: always
+  depends_on:
+    - php
+  networks:
+    - frontend
+    - backend
+
+ mysql:
+  image: mysql:5.7
+  container_name: mysql
+  volumes:
+    - dbdata:/var/lib/mysql
+  restart: always
+  environment:
+    - MYSQL_ROOT_PASSWORD=secret
+    - MYSQL_DATABASE=people
+    - MYSQL_USER=root
+    - MYSQL_PASSWORD=secret
+  ports:
+    - "33061:3306"
+  command: --init-file /data/application/init.sql
+  volumes:
+    - ./init.sql:/data/application/init.sql
+  networks:
+    - backend
+
+ php:
+  build:
+      ./php
+  volumes:
+    - ./src:/var/www/html
+    - ./php/php.ini:/usr/local/etc/php/php.ini
+  restart: always
+  depends_on:
+    - mysql
+  networks:
+    - backend
+
+networks:
+  frontend:
+  backend:
